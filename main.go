@@ -14,7 +14,7 @@ func main() {
 	CloudflareDNSRecord := os.Getenv("CLOUDFLARE_DNS_RECORD")
 
 	// Split the Cloudflare DNS record into its components
-	cloudflareRecordName, cloudflareZoneName, errorOccurred := split(CloudflareDNSRecord)
+	cloudflareRecordName, cloudflareZoneName, errorOccurred := splitRecord(CloudflareDNSRecord)
 	if errorOccurred != nil {
 		log.Fatalln(errorOccurred)
 	}
@@ -23,15 +23,15 @@ func main() {
 	fmt.Println(cloudflareRecordName)
 
 	// Create a Cloudflare API client using the API key
-	apiClient, err := cloudflare.NewWithAPIToken(CloudflareAPIKey)
-	if err != nil {
-		log.Println(err)
+	apiClient, errorOccurred := cloudflare.NewWithAPIToken(CloudflareAPIKey)
+	if errorOccurred != nil {
+		log.Println(errorOccurred)
 	}
 
 	// Retrieve the Cloudflare zone ID by zone name
-	zoneID, err := apiClient.ZoneIDByName(cloudflareZoneName)
-	if err != nil {
-		log.Println(err)
+	zoneID, errorOccurred := apiClient.ZoneIDByName(cloudflareZoneName)
+	if errorOccurred != nil {
+		log.Println(errorOccurred)
 	}
 
 	// TODO Remove after variable is implemented in function call
@@ -41,7 +41,7 @@ func main() {
 
 // split function takes a Cloudflare DNS record and splits it into recordName and zoneName.
 // It returns these components as strings and an error if the DNS record is invalid.
-func split(CloudflareDNSRecord string) (string, string, error) {
+func splitRecord(CloudflareDNSRecord string) (string, string, error) {
 	splitDNSRecord := strings.Split(CloudflareDNSRecord, ".")
 	if len(splitDNSRecord) != 3 {
 		return "", "", fmt.Errorf("invalid DNS Record: %s", CloudflareDNSRecord)

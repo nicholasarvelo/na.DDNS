@@ -26,7 +26,7 @@ func main() {
 	ctx := context.Background()
 
 	// Split the Cloudflare DNS record into its components
-	_, cloudflareZoneName, errorOccurred := splitRecord(cloudflareDNSRecord)
+	cloudflareZoneName, errorOccurred := splitRecord(cloudflareDNSRecord)
 	if errorOccurred != nil {
 		log.Fatalln(errorOccurred)
 	}
@@ -131,17 +131,16 @@ func queryPublicIP() (string, error) {
 
 // split function takes a Cloudflare DNS record and splits it into recordName and zoneName.
 // It returns these components as strings and an error if the DNS record is invalid.
-func splitRecord(cloudflareDNSRecord string) (string, string, error) {
+func splitRecord(cloudflareDNSRecord string) (string, error) {
 	splitDNSRecord := strings.Split(cloudflareDNSRecord, ".")
 	if len(splitDNSRecord) != 3 {
-		return "", "", fmt.Errorf("invalid DNS Record: %s", cloudflareDNSRecord)
+		return "", fmt.Errorf("invalid DNS Record: %s", cloudflareDNSRecord)
 	}
 
-	recordName := splitDNSRecord[0]
 	zoneName := strings.Join(
 		[]string{splitDNSRecord[1], splitDNSRecord[2]},
 		".",
 	)
 
-	return recordName, zoneName, nil
+	return zoneName, nil
 }

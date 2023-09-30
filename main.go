@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/cloudflare/cloudflare-go"
 	"log"
@@ -12,6 +13,9 @@ func main() {
 	// Retrieve Cloudflare API key and DNS record from environment variables
 	CloudflareAPIKey := os.Getenv("CLOUDFLARE_API_KEY")
 	CloudflareDNSRecord := os.Getenv("CLOUDFLARE_DNS_RECORD")
+
+	// Most API calls require a Context
+	ctx := context.Background()
 
 	// Split the Cloudflare DNS record into its components
 	cloudflareRecordName, cloudflareZoneName, errorOccurred := splitRecord(CloudflareDNSRecord)
@@ -31,12 +35,21 @@ func main() {
 	// Retrieve the Cloudflare zone ID by zone name
 	zoneID, errorOccurred := apiClient.ZoneIDByName(cloudflareZoneName)
 	if errorOccurred != nil {
-		log.Println(errorOccurred)
+		log.Println("Failed to retrieve Cloudflare Zone ID:", errorOccurred)
 	}
 
-	// TODO Remove after variable is implemented in function call
-	// Print the Cloudflare zone ID
-	fmt.Println(zoneID)
+	cloudflareZoneID := cloudflare.ZoneIdentifier(zoneID)
+
+	zoneRecord, _, errorOccurred := apiClient.ListDNSRecords(
+		ctx,
+		cloudflareZoneID,
+		cloudflare.ListDNSRecordsParams{Name: CloudflareDNSRecord},
+	)
+	if errorOccurred != nil {
+		log.Println("Failed to list records:", errorOccurred)
+	}
+
+	recordExists := len(zoneRecord) != 0
 }
 
 // split function takes a Cloudflare DNS record and splits it into recordName and zoneName.

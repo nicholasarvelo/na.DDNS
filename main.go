@@ -17,9 +17,26 @@ import (
 func main() {
 	// Retrieve Cloudflare API key and DNS record from environment variables
 	cloudflareAPIKey := os.Getenv("CLOUDFLARE_API_KEY")
+	if cloudflareAPIKey == "" {
+		log.Fatalln("Missing Cloudflare API Key")
+	}
+
 	cloudflareDNSRecord := os.Getenv("CLOUDFLARE_DNS_RECORD")
+	if cloudflareDNSRecord == "" {
+		log.Fatalln("Missing Cloudflare DNS record")
+	}
+
 	cloudflareDNSRecordType := os.Getenv("CLOUDFLARE_DNS_RECORD_TYPE")
+	if cloudflareDNSRecordType == "" {
+		os.Setenv("CLOUDFLARE_DNS_RECORD_TYPE", "A")
+		cloudflareDNSRecordType = "A"
+	}
+
 	pollingInterval := os.Getenv("POLLING_INTERVAL")
+	if pollingInterval == "" {
+		os.Setenv("POLLING_INTERVAL", "5")
+		pollingInterval = "5"
+	}
 
 	// Most API calls require a Context
 	ctx := context.Background()

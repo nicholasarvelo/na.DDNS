@@ -4,11 +4,14 @@ import (
 	"context"
 	"fmt"
 	"github.com/cloudflare/cloudflare-go"
+	"github.com/robfig/cron/v3"
 	"io"
 	"log"
 	"net/http"
 	"os"
+	"runtime"
 	"strings"
+	"time"
 )
 
 func main() {
@@ -16,6 +19,7 @@ func main() {
 	cloudflareAPIKey := os.Getenv("CLOUDFLARE_API_KEY")
 	cloudflareDNSRecord := os.Getenv("CLOUDFLARE_DNS_RECORD")
 	cloudflareDNSRecordType := os.Getenv("CLOUDFLARE_DNS_RECORD_TYPE")
+	pollingInterval := os.Getenv("POLLING_INTERVAL")
 
 	// Most API calls require a Context
 	ctx := context.Background()
@@ -26,79 +30,108 @@ func main() {
 		log.Fatalln(errorOccurred)
 	}
 
-	currentPublicIP, errorOccured := queryPublicIP()
-	if errorOccured != nil {
-		log.Fatalf("Failed to retrieve public ip: %v", errorOccured)
-	}
+	cronjob := cron.New()
 
-	// Create a Cloudflare API client using the API key
-	apiClient, errorOccurred := cloudflare.NewWithAPIToken(cloudflareAPIKey)
-	if errorOccurred != nil {
-		log.Fatalln(errorOccurred)
-	}
+	cronEntryID, errorOccurred := cronjob.AddFunc(
+		fmt.Sprintf("@every %sm", pollingInterval), func() {
+			currentPublicIP, errorOccured := queryPublicIP()
+			if errorOccured != nil {
+				log.Fatalf("Failed to retrieve public ip: %v", errorOccured)
+			}
 
-	// Retrieve the Cloudflare zone ID by zone name
-	zoneID, errorOccurred := apiClient.ZoneIDByName(cloudflareZoneName)
-	if errorOccurred != nil {
-		log.Fatalln("Failed to retrieve Cloudflare Zone ID:", errorOccurred)
-	}
+			// Create a Cloudflare API client using the API key
+			apiClient, errorOccurred := cloudflare.NewWithAPIToken(cloudflareAPIKey)
+			if errorOccurred != nil {
+				log.Fatalln(errorOccurred)
+			}
 
-	cloudflareZoneID := cloudflare.ZoneIdentifier(zoneID)
+			// Retrieve the Cloudflare zone ID by zone name
+			zoneID, errorOccurred := apiClient.ZoneIDByName(cloudflareZoneName)
+			if errorOccurred != nil {
+				log.Fatalln(
+					"Failed to retrieve Cloudflare Zone ID:",
+					errorOccurred,
+				)
+			}
 
-	zoneRecord, _, errorOccurred := apiClient.ListDNSRecords(
-		ctx,
-		cloudflareZoneID,
-		cloudflare.ListDNSRecordsParams{Name: cloudflareDNSRecord},
+			cloudflareZoneID := cloudflare.ZoneIdentifier(zoneID)
+
+			zoneRecord, _, errorOccurred := apiClient.ListDNSRecords(
+				ctx,
+				cloudflareZoneID,
+				cloudflare.ListDNSRecordsParams{Name: cloudflareDNSRecord},
+			)
+			if errorOccurred != nil {
+				log.Fatalln("Failed to list records:", errorOccurred)
+			}
+
+			if len(zoneRecord) == 0 {
+				timeStamp := time.Now().Format(time.Stamp)
+				comment := fmt.Sprintf("LFGoD2NS [%s]", timeStamp)
+				yes := booleanPointer(true)
+				_, errorOccurred = apiClient.CreateDNSRecord(
+					ctx, cloudflareZoneID, cloudflare.CreateDNSRecordParams{
+						Type:      cloudflareDNSRecordType,
+						Name:      cloudflareDNSRecord,
+						Content:   currentPublicIP,
+						Comment:   comment,
+						Proxiable: true,
+						Proxied:   yes,
+					},
+				)
+				if errorOccurred != nil {
+					log.Printf("Failed to create record: %s", errorOccurred)
+				} else {
+					log.Printf(
+						"Record Created: '%s' is resolving to '%s'",
+						cloudflareDNSRecord,
+						currentPublicIP,
+					)
+				}
+			} else if zoneRecord[0].Content != currentPublicIP {
+				timeStamp := time.Now().Format(time.Stamp)
+				comment := stringPointer(
+					fmt.Sprintf(
+						"LFGoD2NS [%s]",
+						timeStamp,
+					),
+				)
+				_, errorOccurred = apiClient.UpdateDNSRecord(
+					ctx, cloudflareZoneID, cloudflare.UpdateDNSRecordParams{
+						Name:    cloudflareDNSRecord,
+						Content: currentPublicIP,
+						Comment: comment,
+						ID:      zoneRecord[0].ID,
+					},
+				)
+				if errorOccurred != nil {
+					log.Fatalf("Unable to update record: %s", errorOccurred)
+				} else {
+					log.Printf(
+						"Record Updated: '%s' is resolving to '%s'",
+						cloudflareDNSRecord,
+						currentPublicIP,
+					)
+				}
+			} else {
+				log.Printf(
+					"No update required: '%s' is already resolving to %s",
+					cloudflareDNSRecord,
+					currentPublicIP,
+				)
+			}
+		},
 	)
 	if errorOccurred != nil {
-		log.Fatalln("Failed to list records:", errorOccurred)
+		errorMessage := fmt.Errorf("error with cron entry '%v'", cronEntryID)
+		fmt.Printf("%v:%v", errorMessage, errorOccurred)
 	}
 
-	if len(zoneRecord) == 0 {
-		yes := booleanPointer(true)
-		_, errorOccurred = apiClient.CreateDNSRecord(
-			ctx, cloudflareZoneID, cloudflare.CreateDNSRecordParams{
-				Type:      cloudflareDNSRecordType,
-				Name:      cloudflareDNSRecord,
-				Content:   currentPublicIP,
-				Comment:   "LFGoD2NS-Cloudflare",
-				Proxiable: true,
-				Proxied:   yes,
-			},
-		)
-		if errorOccurred != nil {
-			log.Printf("Failed to create record: %s", errorOccurred)
-		} else {
-			log.Printf(
-				"Record Created: '%s' is resolving to '%s'",
-				cloudflareDNSRecord,
-				currentPublicIP,
-			)
-		}
-	} else if zoneRecord[0].Content != currentPublicIP {
-		_, errorOccurred = apiClient.UpdateDNSRecord(
-			ctx, cloudflareZoneID, cloudflare.UpdateDNSRecordParams{
-				Name:    cloudflareDNSRecord,
-				Content: currentPublicIP,
-				ID:      zoneRecord[0].ID,
-			},
-		)
-		if errorOccurred != nil {
-			log.Fatalf("Unable to update record: %s", errorOccurred)
-		} else {
-			log.Printf(
-				"Record Updated: '%s' is resolving to '%s'",
-				cloudflareDNSRecord,
-				currentPublicIP,
-			)
-		}
-	} else {
-		log.Printf(
-			"No update required: '%s' is already resolving to %s",
-			cloudflareDNSRecord,
-			currentPublicIP,
-		)
-	}
+	cronjob.Start()
+
+	log.Println("LFGoD2NS-Cloudfare started")
+
+	runtime.Goexit()
 }
 
 // booleanPointer returns a pointer to a boolean value, primarily aimed at
@@ -106,6 +139,13 @@ func main() {
 // boolean fields in Go.
 func booleanPointer(boolean bool) *bool {
 	return &boolean
+}
+
+// stringPointer returns a pointer to a string value, primarily aimed at
+// enhancing code readability when dealing with structs representing optional
+// string fields in Go.
+func stringPointer(string string) *string {
+	return &string
 }
 
 // queryPublicIP retrieves the public IPv4 address of the local machine by making

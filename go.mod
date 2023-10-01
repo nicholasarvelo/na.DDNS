@@ -2,7 +2,10 @@ module dynmcdns-cldflr
 
 go 1.21
 
-require github.com/cloudflare/cloudflare-go v0.77.0
+require (
+	github.com/cloudflare/cloudflare-go v0.77.0
+	github.com/robfig/cron/v3 v3.0.1
+)
 
 require (
 	github.com/goccy/go-json v0.10.2 // indirect

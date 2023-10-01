@@ -17,11 +17,6 @@ func main() {
 	cloudflareDNSRecord := os.Getenv("CLOUDFLARE_DNS_RECORD")
 	cloudflareDNSRecordType := os.Getenv("CLOUDFLARE_DNS_RECORD_TYPE")
 
-	currentPublicIP, errorOccured := queryPublicIP()
-	if errorOccured != nil {
-		log.Fatalf("Failed to retrieve public ip: %v", errorOccured)
-	}
-
 	// Most API calls require a Context
 	ctx := context.Background()
 
@@ -29,6 +24,11 @@ func main() {
 	cloudflareZoneName, errorOccurred := parseZoneName(cloudflareDNSRecord)
 	if errorOccurred != nil {
 		log.Fatalln(errorOccurred)
+	}
+
+	currentPublicIP, errorOccured := queryPublicIP()
+	if errorOccured != nil {
+		log.Fatalf("Failed to retrieve public ip: %v", errorOccured)
 	}
 
 	// Create a Cloudflare API client using the API key

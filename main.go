@@ -67,7 +67,7 @@ func main() {
 
 			if len(zoneRecord) == 0 {
 				timeStamp := time.Now().Format(time.Stamp)
-				comment := fmt.Sprintf("na.ddns [%s]", timeStamp)
+				comment := fmt.Sprintf("na.DDNS [%s]", timeStamp)
 				yes := booleanPointer(true)
 				_, errorOccurred = apiClient.CreateDNSRecord(
 					ctx, cloudflareZoneID, cloudflare.CreateDNSRecordParams{
@@ -92,7 +92,7 @@ func main() {
 				timeStamp := time.Now().Format(time.Stamp)
 				comment := stringPointer(
 					fmt.Sprintf(
-						"na.ddns [%s]",
+						"na.DDNS [%s]",
 						timeStamp,
 					),
 				)
@@ -129,7 +129,7 @@ func main() {
 
 	cronjob.Start()
 
-	log.Println("na.ddns started")
+	log.Println("na.DDNS started")
 
 	runtime.Goexit()
 }

@@ -1,6 +1,6 @@
-# na.ddns - Cloudflare Dynamic DNS Client
+# na.DDNS - Cloudflare Dynamic DNS Client
 
-**na.ddns** is a Docker application that updates Cloudflare DNS records with your dynamic public IP address at regular intervals. It leverages the Cloudflare API to manage your DNS records dynamically, ensuring your services are always accessible even with changing IP addresses.
+**na.DDNS** is a Docker application that updates Cloudflare DNS records with your dynamic public IP address at regular intervals. It leverages the Cloudflare API to manage your DNS records dynamically, ensuring your services are always accessible even with changing IP addresses.
 
 ## Prerequisites
 

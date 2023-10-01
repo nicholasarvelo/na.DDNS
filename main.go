@@ -75,7 +75,7 @@ func main() {
 				currentPublicIP,
 			)
 		}
-	} else {
+	} else if zoneRecord[0].Content != currentPublicIP {
 		_, errorOccurred = apiClient.UpdateDNSRecord(
 			ctx, cloudflareZoneID, cloudflare.UpdateDNSRecordParams{
 				Name:    cloudflareDNSRecord,
@@ -92,6 +92,12 @@ func main() {
 				currentPublicIP,
 			)
 		}
+	} else {
+		log.Printf(
+			"No update required: '%s' is already resolving to %s",
+			cloudflareDNSRecord,
+			currentPublicIP,
+		)
 	}
 }
 

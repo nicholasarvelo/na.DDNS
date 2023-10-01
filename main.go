@@ -34,13 +34,13 @@ func main() {
 	// Create a Cloudflare API client using the API key
 	apiClient, errorOccurred := cloudflare.NewWithAPIToken(cloudflareAPIKey)
 	if errorOccurred != nil {
-		log.Println(errorOccurred)
+		log.Fatalln(errorOccurred)
 	}
 
 	// Retrieve the Cloudflare zone ID by zone name
 	zoneID, errorOccurred := apiClient.ZoneIDByName(cloudflareZoneName)
 	if errorOccurred != nil {
-		log.Println("Failed to retrieve Cloudflare Zone ID:", errorOccurred)
+		log.Fatalln("Failed to retrieve Cloudflare Zone ID:", errorOccurred)
 	}
 
 	cloudflareZoneID := cloudflare.ZoneIdentifier(zoneID)
@@ -51,7 +51,7 @@ func main() {
 		cloudflare.ListDNSRecordsParams{Name: cloudflareDNSRecord},
 	)
 	if errorOccurred != nil {
-		log.Println("Failed to list records:", errorOccurred)
+		log.Fatalln("Failed to list records:", errorOccurred)
 	}
 
 	if len(zoneRecord) == 0 {
@@ -84,7 +84,7 @@ func main() {
 			},
 		)
 		if errorOccurred != nil {
-			fmt.Printf("Unable to update record: %s", errorOccurred)
+			log.Fatalf("Unable to update record: %s", errorOccurred)
 		} else {
 			log.Printf(
 				"Record Updated: '%s' is resolving to '%s'",

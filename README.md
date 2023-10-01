@@ -1,50 +1,26 @@
-# LFGoD2NS-Cloudflare (Might Change :hurtrealbad:)
-This Go application serves as a Dynamic DNS (DDNS) client that interacts with the Cloudflare DNS service. It runs as a containerized service and periodically polls your public IP address. When your public IP changes, the application automatically updates the corresponding DNS record on Cloudflare to ensure that your domain always resolves to the correct IP address.
+# na.ddns - Cloudflare Dynamic DNS Client
 
-## Features (Work in Progress)
-
-- **Dynamic DNS Updates:** Automatically updates your Cloudflare DNS records based on changes to your public IP address.
-- **Proxy Status :** Choose if record is 'Proxied' or 'DNS Only'.
-- **Error Handling:** Error handling and logging for better tracking of any issues.
+**na.ddns** is a Docker application that updates Cloudflare DNS records with your dynamic public IP address at regular intervals. It leverages the Cloudflare API to manage your DNS records dynamically, ensuring your services are always accessible even with changing IP addresses.
 
 ## Prerequisites
 
-Before using this application, make sure you have the following prerequisites:
+Before you begin, ensure you have met the following requirements:
 
-- [Docker](https://www.docker.com/) installed on your system.
-- A Cloudflare account and API key.
-- Familiarity with environment variables.
+- Docker installed on your host system.
+- Cloudflare API key and DNS record information.
+- Basic knowledge of Docker and Cloudflare.
 
-## Getting Started
+## Usage
 
-1. Clone this repository to your local machine.
+1. This section will come, eventually. 
 
-2. Set the required environment variables in a `.env` file or in your Docker Compose configuration:
+```shell
+¯\_(ツ)_/¯
+```
 
-   ```env
-   CLOUDFLARE_API_KEY=your_cloudflare_api_key
-   CLOUDFLARE_DNS_RECORD=your_dns_record
-   CLOUDFLARE_DNS_RECORD_TYPE=your_dns_record_type
-   ```
+## Environment Variables
 
-3. Build and run the application as a Docker container:
-
-   ```bash
-   docker-compose up -d
-   ```
-
-   The application will start polling for IP address changes and updating the Cloudflare DNS record accordingly.
-
-4. Monitor the logs to see the status of DNS record updates:
-
-   ```bash
-   docker-compose logs -f
-   ```
-
-## Contributing
-
-Feel free to contribute to this project by creating issues or pull requests. Your feedback and contributions are greatly appreciated!
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
+- `CLOUDFLARE_API_KEY`: Your Cloudflare API key.
+- `CLOUDFLARE_DNS_RECORD`: The DNS record you want to update.
+- `CLOUDFLARE_DNS_RECORD_TYPE`: The type of DNS record (e.g., A, AAAA).
+- `POLLING_INTERVAL`: The interval at which to check for IP updates in minutes.

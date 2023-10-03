@@ -106,7 +106,7 @@ func main() {
 			}
 
 			if len(zoneRecord) == 0 {
-				timeStamp := time.Now().Format(time.Stamp)
+				timeStamp := time.Now().Format(time.DateTime)
 				comment := fmt.Sprintf("na.DDNS [%s]", timeStamp)
 				_, errorOccurred = apiClient.CreateDNSRecord(
 					ctx, cloudflareZoneID, cloudflare.CreateDNSRecordParams{

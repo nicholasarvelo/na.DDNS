@@ -16,7 +16,7 @@ import (
 )
 
 func main() {
-	// Retrieve Cloudflare API key and DNS record from environment variables
+	// Retrieve and validate environment variables.
 	cloudflareAPIKey := os.Getenv("CLOUDFLARE_API_KEY")
 	if cloudflareAPIKey == "" {
 		log.Fatalln("'CLOUDFLARE_API_KEY' env variable missing")
@@ -46,7 +46,6 @@ func main() {
 	}
 
 	var proxiedSetting *bool
-
 	proxied := os.Getenv("PROXIED")
 	if proxied == "" {
 		proxiedSetting = booleanPointer(false)
@@ -58,10 +57,10 @@ func main() {
 		}
 	}
 
-	// Most API calls require a Context
+	// Most API calls require a Context.
 	ctx := context.Background()
 
-	// Parse the zone name
+	// Parse the zone name.
 	cloudflareZoneName, errorOccurred := parseZoneName(cloudflareDNSRecord)
 	if errorOccurred != nil {
 		log.Fatalf(
@@ -70,8 +69,10 @@ func main() {
 		)
 	}
 
+	// Initialize a new cron job.
 	cronjob := cron.New()
 
+	// Schedule the new cron job.
 	cronEntryID, errorOccurred := cronjob.AddFunc(
 		fmt.Sprintf("@every %sm", pollingInterval), func() {
 			currentPublicIP, errorOccured := queryPublicIP()
@@ -79,13 +80,13 @@ func main() {
 				log.Fatalf("Failed to retrieve public ip: %v", errorOccured)
 			}
 
-			// Create a Cloudflare API client using the API key
+			// Create a Cloudflare API client using the API key.
 			apiClient, errorOccurred := cloudflare.NewWithAPIToken(cloudflareAPIKey)
 			if errorOccurred != nil {
 				log.Fatalln(errorOccurred)
 			}
 
-			// Retrieve the Cloudflare zone ID by zone name
+			// Retrieve the Cloudflare Zone ID.
 			zoneID, errorOccurred := apiClient.ZoneIDByName(cloudflareZoneName)
 			if errorOccurred != nil {
 				log.Fatalln(
@@ -94,8 +95,8 @@ func main() {
 				)
 			}
 
+			// Retrieve the DNS records for the specified Zone ID.
 			cloudflareZoneID := cloudflare.ZoneIdentifier(zoneID)
-
 			zoneRecord, _, errorOccurred := apiClient.ListDNSRecords(
 				ctx,
 				cloudflareZoneID,
@@ -105,6 +106,11 @@ func main() {
 				log.Fatalln("Failed to list records:", errorOccurred)
 			}
 
+			// This section of code checks if a DNS record exists. If it doesn't
+			// exist, a new DNS record is created. The new record includes the
+			// current public IP address, the specified record type, hostname
+			// (name), a comment with a creation timestamp, and a setting for
+			// whether it should be proxied or not.
 			if len(zoneRecord) == 0 {
 				timeStamp := time.Now().Format(time.DateTime)
 				comment := fmt.Sprintf("na.DDNS [%s]", timeStamp)
@@ -127,6 +133,11 @@ func main() {
 						currentPublicIP,
 					)
 				}
+				// In the event that the DNS record exists, this part of the
+				// code verifies whether the IP address (content) of the
+				// record differs from the current public IP address. If
+				// they are different, the DNS record is updated with the
+				// current IP and a timestamp in the record's comment.
 			} else if zoneRecord[0].Content != currentPublicIP {
 				timeStamp := time.Now().Format(time.Stamp)
 				comment := stringPointer(
@@ -153,6 +164,8 @@ func main() {
 					)
 				}
 			} else {
+				// If none of the above conditions apply, it logs that the
+				// existing record is valid and doesn't need any changes.
 				log.Printf(
 					"Record Valid: '%s' is already resolving to '%s'",
 					cloudflareDNSRecord,
@@ -166,10 +179,11 @@ func main() {
 		fmt.Printf("%v:%v", errorMessage, errorOccurred)
 	}
 
+	// Start the cron job and log a message stating so.
 	cronjob.Start()
-
 	log.Println("na.DDNS started")
 
+	// This runs the program indefinitely.
 	runtime.Goexit()
 }
 
@@ -204,6 +218,7 @@ func queryPublicIP() (string, error) {
 		}
 	}()
 
+	// Read the entire response body from the HTTP request and stores it.
 	response, errorOccurred := io.ReadAll(request.Body)
 	if errorOccurred != nil {
 		log.Println(errorOccurred)

@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -18,24 +19,43 @@ func main() {
 	// Retrieve Cloudflare API key and DNS record from environment variables
 	cloudflareAPIKey := os.Getenv("CLOUDFLARE_API_KEY")
 	if cloudflareAPIKey == "" {
-		log.Fatalln("Missing Cloudflare API Key")
+		log.Fatalln("'CLOUDFLARE_API_KEY' env variable missing")
 	}
 
 	cloudflareDNSRecord := os.Getenv("CLOUDFLARE_DNS_RECORD")
 	if cloudflareDNSRecord == "" {
-		log.Fatalln("Missing Cloudflare DNS record")
+		log.Fatalln("'CLOUDFLARE_DNS_RECORD' env variable missing")
 	}
 
 	cloudflareDNSRecordType := os.Getenv("CLOUDFLARE_DNS_RECORD_TYPE")
 	if cloudflareDNSRecordType == "" {
-		os.Setenv("CLOUDFLARE_DNS_RECORD_TYPE", "A")
 		cloudflareDNSRecordType = "A"
 	}
 
 	pollingInterval := os.Getenv("POLLING_INTERVAL")
 	if pollingInterval == "" {
-		os.Setenv("POLLING_INTERVAL", "5")
-		pollingInterval = "5"
+		pollingInterval = "3"
+	} else {
+		parsedInteger, errorOccurred := strconv.Atoi(pollingInterval)
+		if errorOccurred != nil {
+			log.Fatalln(errorOccurred)
+		}
+		if parsedInteger < 1 || parsedInteger > 59 {
+			log.Fatalf("'POLLING_INTERVAL' must have a value between '1' and '59'")
+		}
+	}
+
+	var proxiedSetting *bool
+
+	proxied := os.Getenv("PROXIED")
+	if proxied == "" {
+		proxiedSetting = booleanPointer(false)
+	} else {
+		proxied, errorOccurred := strconv.ParseBool(proxied)
+		proxiedSetting = booleanPointer(proxied)
+		if errorOccurred != nil {
+			log.Fatalln("'PROXIED' must either be 'true' or 'false'")
+		}
 	}
 
 	// Most API calls require a Context
@@ -44,7 +64,10 @@ func main() {
 	// Parse the zone name
 	cloudflareZoneName, errorOccurred := parseZoneName(cloudflareDNSRecord)
 	if errorOccurred != nil {
-		log.Fatalln(errorOccurred)
+		log.Fatalf(
+			"'CLOUDFLARE_DNS_RECORD' must be 'foo.bar.com'; %s",
+			errorOccurred,
+		)
 	}
 
 	cronjob := cron.New()
@@ -85,7 +108,6 @@ func main() {
 			if len(zoneRecord) == 0 {
 				timeStamp := time.Now().Format(time.Stamp)
 				comment := fmt.Sprintf("na.DDNS [%s]", timeStamp)
-				yes := booleanPointer(true)
 				_, errorOccurred = apiClient.CreateDNSRecord(
 					ctx, cloudflareZoneID, cloudflare.CreateDNSRecordParams{
 						Type:      cloudflareDNSRecordType,
@@ -93,7 +115,7 @@ func main() {
 						Content:   currentPublicIP,
 						Comment:   comment,
 						Proxiable: true,
-						Proxied:   yes,
+						Proxied:   proxiedSetting,
 					},
 				)
 				if errorOccurred != nil {
@@ -132,7 +154,7 @@ func main() {
 				}
 			} else {
 				log.Printf(
-					"No update required: '%s' is already resolving to %s",
+					"Record Valid: '%s' is already resolving to '%s'",
 					cloudflareDNSRecord,
 					currentPublicIP,
 				)
@@ -198,7 +220,7 @@ func queryPublicIP() (string, error) {
 func parseZoneName(cloudflareDNSRecord string) (string, error) {
 	splitDNSRecord := strings.Split(cloudflareDNSRecord, ".")
 	if len(splitDNSRecord) != 3 {
-		return "", fmt.Errorf("invalid dns record: %s", cloudflareDNSRecord)
+		return "", fmt.Errorf("you entered '%s'", cloudflareDNSRecord)
 	}
 
 	zoneName := strings.Join(

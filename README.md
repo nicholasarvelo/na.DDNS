@@ -1,6 +1,6 @@
 # na.DDNS - Cloudflare Dynamic DNS Client
 
-One of my favorite features of Google Domains is their native support for Dynamic DNS at no additional cost. It's a shame that all good things eventually (come to an end)[https://www.theverge.com/2023/6/16/23763340/google-domains-sunset-sell-squarespace].
+One of my favorite features of Google Domains is their native support for Dynamic DNS at no additional cost. It's a shame that all good things eventually [come to an end](https://www.theverge.com/2023/6/16/23763340/google-domains-sunset-sell-squarespace).
 
 I moved all my domains over to Cloudflare, and that's all and good; however, they do not offer any support for DDNS. I wasn't happy with the solutions I came across, so I decided to write my own.
 

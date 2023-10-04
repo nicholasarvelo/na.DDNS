@@ -28,8 +28,10 @@ func main() {
 	}
 
 	cloudflareDNSRecordType := os.Getenv("CLOUDFLARE_DNS_RECORD_TYPE")
-	if cloudflareDNSRecordType == "" {
+	if cloudflareDNSRecordType == "" || cloudflareDNSRecordType == "AAAA" {
 		cloudflareDNSRecordType = "A"
+	} else {
+		log.Fatalln("'CLOUDFLARE_DNS_RECORD_TYPE' must be 'A'")
 	}
 
 	pollingInterval := os.Getenv("POLLING_INTERVAL")

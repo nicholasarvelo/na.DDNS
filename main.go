@@ -28,10 +28,13 @@ func main() {
 	}
 
 	cloudflareDNSRecordType := os.Getenv("CLOUDFLARE_DNS_RECORD_TYPE")
-	if cloudflareDNSRecordType == "" || cloudflareDNSRecordType == "AAAA" {
+	if cloudflareDNSRecordType == "" {
 		cloudflareDNSRecordType = "A"
-	} else {
-		log.Fatalln("'CLOUDFLARE_DNS_RECORD_TYPE' must be 'A'")
+	} else if cloudflareDNSRecordType != "A" && cloudflareDNSRecordType != "AAAA" {
+		log.Fatalf(
+			"'CLOUDFLARE_DNS_RECORD_TYPE' must be either 'A' or 'AAAA'. You entered '%v'",
+			cloudflareDNSRecordType,
+		)
 	}
 
 	pollingInterval := os.Getenv("POLLING_INTERVAL")
@@ -77,7 +80,7 @@ func main() {
 	// Schedule the new cron job.
 	cronEntryID, errorOccurred := cronjob.AddFunc(
 		fmt.Sprintf("@every %sm", pollingInterval), func() {
-			currentPublicIP, errorOccured := queryPublicIP()
+			currentPublicIP, errorOccured := queryPublicIP(cloudflareDNSRecordType)
 			if errorOccured != nil {
 				log.Fatalf("Failed to retrieve public ip: %v", errorOccured)
 			}
@@ -203,10 +206,15 @@ func stringPointer(string string) *string {
 	return &string
 }
 
-// queryPublicIP retrieves the public IPv4 address of the local machine by making
-// a GET request to "https://ipv4.icanhazip.com" and returns it as a string.
-func queryPublicIP() (string, error) {
-	url := "https://ipv4.icanhazip.com"
+// queryPublicIP retrieves the public address of the local machine
+func queryPublicIP(recordType string) (string, error) {
+	var protocol string
+	if recordType == "A" {
+		protocol = "ipv4"
+	} else if recordType == "AAAA" {
+		protocol = "ipv6"
+	}
+	url := fmt.Sprintf("https://%s.icanhazip.com", protocol)
 	request, errorOccurred := http.Get(url)
 	if errorOccurred != nil {
 		log.Println(errorOccurred)

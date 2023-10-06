@@ -28,7 +28,7 @@ So I decided to write my own, which resulted in this Dynamic DNS client for Clou
    * `CLOUDFLARE_DNS_RECORD`: (Required) The DNS record you want to update. (e.g. `foo.bar.com`)
 
 3. Additional but optional environment variables:
-   * `CLOUDFLARE_DNS_RECORD_TYPE`: (Optional) The DNS record type. Allowed options are 'A' or 'AAAA'. (Defaults to `A`)
+   * `CLOUDFLARE_DNS_RECORD_TYPE`: (Optional) The DNS record type. Allowed options are `A` or `AAAA`. (Defaults to `A`)
    * `POLLING_INTERVAL`: (Optional) The interval (in minutes) between IP checks and updates. Allowed range is `1` through `59`. (Defaults to `3`)
    * `PROXIED`: (Optional) Sets the [Proxy status](https://developers.cloudflare.com/dns/manage-dns-records/reference/proxied-dns-records/) of the DNS record. Allowed options are `true` or `false`. (Defaults to `false`)
      * naDDNS cannot modify the proxied status of an existing record; however, I will be adding this capability soon.

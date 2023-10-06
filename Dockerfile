@@ -1,9 +1,17 @@
-FROM golang:1.21
+FROM golang:latest
+LABEL maintainer="nicholas@arvelo.dev"
 
-LABEL maintainer="Nicholas Arvelo nicholas@arvelo.dev"
-LABEL com.na_ddns.version="1.0"
-LABEL com.na_ddns.description="na.DDNS - Cloudflare Dynamic DNS Client"
-LABEL com.na_ddns.release-date="2023-10-01"
+ARG BUILD_DATE
+ARG BUILD_VERSION
+
+LABEL org.label-schema.schema-version="1.0"
+
+LABEL org.label-schema.build-date="$BUILD_DATE"
+LABEL org.label-schema.version="$BUILD_VERSION"
+
+LABEL org.label-schema.name="na.DDNS"
+LABEL org.label-schema.description="Cloudflare Dynamic DNS Client"
+LABEL org.label-schema.vcs-url="https://github.com/nicholasarvelo/na.DDNS"
 
 WORKDIR /usr/src/na.ddns
 

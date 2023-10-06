@@ -21,7 +21,7 @@ So I decided to write my own, which resulted in this Dynamic DNS client for Clou
 ### Getting Started
 1. Pull down the image:
      ```shell
-     docker pull steptimeeditor/ns.ddns
+     docker pull steptimeeditor/na.ddns
      ```
 2. Environment variables:
    * `CLOUDFLARE_API_KEY`: (Required) Your Cloudflare API key.

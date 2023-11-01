@@ -1,11 +1,5 @@
 FROM golang:latest
 
-ARG BUILD_DATE
-ARG BUILD_VERSION
-
-LABEL org.opencontainers.created="$BUILD_DATE"
-LABEL org.opencontainers.version="$BUILD_VERSION"
-
 LABEL org.opencontainers.title="na.DDNS"
 LABEL org.opencontainers.image.authors="nicholas@arvelo.dev"
 LABEL org.opencontainers.description="Cloudflare Dynamic DNS Client"

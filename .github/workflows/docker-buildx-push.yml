@@ -1,14 +1,7 @@
 name: Docker Buildx & Push
 run-name: docker-buildx-push
 
-on:
-  pull_request:
-    types: ['closed']
-    branches: ['main']
-  push:
-    branches: ['main']
-    paths-ignore: ['**.md']
-    tags: ['v*']
+on: workflow_dispatch
 
 env:
   CHECKOUT_FETCH_DEPTH: '0'

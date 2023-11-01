@@ -1,0 +1,33 @@
+name: Bump Version Git Tag
+run-name: bump-version-tag
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+env:
+  CHECKOUT_FETCH_DEPTH: '0'
+  INITIAL_TAG_VERSION: '1.0'
+  PREFIX_TAG: true
+  PRERELEASE_MODE: true
+
+jobs:
+  bump_version_tag:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.1.1
+        with:
+          fetch-depth: ${{ env.CHECKOUT_FETCH_DEPTH }}
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+      - name: Bump Version Git Tag
+        uses: anothrNick/github-tag-action@1.67.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          INITIAL_VERSION: ${{ env.INITIAL_TAG_VERSION }}
+          PRERELEASE: ${{ env.PRERELEASE_MODE }}
+          WITH_V: ${{ env.PREFIX_TAG }}

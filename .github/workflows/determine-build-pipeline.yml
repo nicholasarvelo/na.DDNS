@@ -1,0 +1,27 @@
+name: Determine Build Pipeline
+run-name: determine-build-pipeline
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  release-build-pipeline:
+    name: Release Build Pipeline
+    if: github.event_name == 'push'
+    uses: './.github/workflows/generate-git-metadata.yml'
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+
+  test-build-pipeline:
+    name: Test Build Pipeline
+    if: github.event_name == 'pull_request'
+    uses: './.github/workflows/generate-build-id.yml'
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}

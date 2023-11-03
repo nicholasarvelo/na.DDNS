@@ -1,0 +1,44 @@
+name: Generate Git Metadata
+run-name: generate-git-metadata
+
+on:
+  workflow_call:
+    secrets:
+      DOCKERHUB_USERNAME:
+        required: true
+      DOCKERHUB_TOKEN:
+        required: true
+
+env:
+  FETCH_ALL: true
+  FETCH_DEPTH: 0
+
+jobs:
+  generate-git-metadata:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4.1.1
+        with:
+          fetch-depth: ${{ env.FETCH_DEPTH }}
+      - name: Bump Version and Push Tag
+        id: bump_tag_version
+        uses: mathieudutour/github-tag-action@v6.1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          fetch_all_tags: ${{ env.FETCH_ALL }}
+      - name: Create a GitHub Release
+        uses: ncipollo/release-action@v1.13.0
+        with:
+          tag: ${{ steps.bump_tag_version.outputs.new_tag }}
+          name: Release ${{ steps.bump_tag_version.outputs.new_tag }}
+          body: ${{ steps.bump_tag_version.outputs.changelog }}
+
+  call-docker-buildx-and-push-workflow:
+    if: github.event_name == 'pull_request'
+    uses: './.github/workflows/docker-buildx-and-push.yml'
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+    with:
+      CALLER_NAME: 'generate-git-metadata'

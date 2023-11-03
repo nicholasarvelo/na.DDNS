@@ -1,0 +1,35 @@
+name: Generate Build ID
+run-name: generate-build-id
+
+on:
+  workflow_call:
+    secrets:
+      DOCKERHUB_USERNAME:
+        required: true
+      DOCKERHUB_TOKEN:
+        required: true
+
+jobs:
+  generate-build-id:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Capture Current Epoch Time
+        run: echo "CURRENT_EPOCH_TIME=$(date +%s)" >> $GITHUB_ENV
+      - name: Generate Build Number
+        id: generate-build-id
+        uses: onyxmueller/build-tag-number@v1.0.2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+    outputs:
+      build_id: ${{ format('build-{0}-{1}', steps.generate-build-id.outputs.build_number, env.CURRENT_EPOCH_TIME) }}
+
+  call-docker-buildx-and-push-workflow:
+    if: github.event_name == 'pull_request'
+    needs: generate-build-id
+    uses: './.github/workflows/docker-buildx-and-push.yml'
+    with:
+      BUILD_ID: ${{ needs.generate-build-id.outputs.build_id }}
+      CALLER_NAME: 'generate-build-id'
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}

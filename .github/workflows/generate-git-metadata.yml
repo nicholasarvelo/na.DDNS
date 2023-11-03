@@ -35,7 +35,6 @@ jobs:
           body: ${{ steps.bump_tag_version.outputs.changelog }}
 
   call-docker-buildx-and-push-workflow:
-    if: github.event_name == 'pull_request'
     uses: './.github/workflows/docker-buildx-and-push.yml'
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}

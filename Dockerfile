@@ -3,7 +3,7 @@ FROM golang:latest
 LABEL org.opencontainers.title="na.DDNS"
 LABEL org.opencontainers.image.authors="nicholas@arvelo.dev"
 LABEL org.opencontainers.description="Cloudflare Dynamic DNS Client"
-LABEL org.opencontainers.source="https://github.com/nicholasarvelo/na.DDNS"
+LABEL org.opencontainers.source="https://github.com/steptimeeditor/na.DDNS"
 
 WORKDIR /usr/src/na.ddns
 

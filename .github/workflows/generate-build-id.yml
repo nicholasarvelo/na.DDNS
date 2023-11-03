@@ -24,7 +24,6 @@ jobs:
       build_id: ${{ format('build-{0}-{1}', steps.generate-build-id.outputs.build_number, env.CURRENT_EPOCH_TIME) }}
 
   call-docker-buildx-and-push-workflow:
-    if: github.event_name == 'pull_request'
     needs: generate-build-id
     uses: './.github/workflows/docker-buildx-and-push.yml'
     with:

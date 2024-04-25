@@ -1,0 +1,30 @@
+name: Golang CI
+run-name: Golang CI
+
+on:
+  push:
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  golangci_lint:
+    name: Golang CI Lint
+    runs-on: [ ubuntu-latest ]
+    steps: 
+      - name: Checkout Repository
+        uses: actions/checkout@v4.1.4
+
+      - name: Setup Go
+      - uses: actions/setup-go@5.0.0
+        with:
+          check-latest: true
+          cache: false
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v5
+        with:
+          version: latest
